@@ -1,8 +1,41 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import './ModelEvaluationDashboard.css';
 
-// Define types for the data structure
+// Responsive chart height hook
+function useChartHeight(defaultHeight = 340, mobileHeight = 220) {
+  const getResponsiveHeight = () => (window.innerWidth <= 480 ? mobileHeight : defaultHeight);
+  const [height, setHeight] = useState(getResponsiveHeight());
+  useEffect(() => {
+    const onResize = () => setHeight(getResponsiveHeight());
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+  return height;
+}
+
+// Responsive axis font size
+function useTickFontSize() {
+  const getFontSize = () => (window.innerWidth <= 480 ? 14 : 12);
+  const [size, setSize] = useState(getFontSize());
+  useEffect(() => {
+    const onResize = () => setSize(getFontSize());
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+  return size;
+}
+
+// Responsive Y-axis domain
+function useYAxisDomain(type: 'main' | 'class') {
+  // On mobile, use a lower min for spread, else use [90, 100]
+  if (typeof window !== 'undefined' && window.innerWidth <= 480) {
+    return type === 'main' ? [85, 100] : [80, 100];
+  }
+  return [90, 100];
+}
+
+// Data types...
 interface ClassificationReport {
   [key: string]: {
     precision: number;
@@ -11,14 +44,12 @@ interface ClassificationReport {
     support: number;
   };
 }
-
 interface ModelData {
   confusion_matrix: number[][];
   classification_report: ClassificationReport;
   accuracy: number;
   roc_auc: number;
 }
-
 interface Data {
   validation: {
     int8: ModelData;
@@ -28,15 +59,12 @@ interface Data {
     float32: ModelData;
   };
 }
-
-// Define types for component props
 interface PerformanceData {
   name: string;
   accuracy: number;
   roc_auc: number;
   type: string;
 }
-
 interface ClassificationData {
   class: string;
   precision: number;
@@ -45,19 +73,16 @@ interface ClassificationData {
   support: number;
   model: string;
 }
-
 interface CustomTooltipProps {
   active?: boolean;
   payload?: Array<{ name: string; value: number; color: string }>;
   label?: string;
 }
-
 interface ConfusionMatrixProps {
   matrix: number[][];
   title: string;
   classes: string[];
 }
-
 interface MetricCardProps {
   title: string;
   value: string;
@@ -109,12 +134,12 @@ const ModelEvaluationDashboard = () => {
 
   const classNames = ['Early Blight', 'Healthy', 'Late Blight'];
   const professionalColors = {
-    primary: '#1e40af', // Professional blue
-    secondary: '#059669', // Professional green
-    accent: '#dc2626', // Professional red
-    neutral: '#374151', // Professional gray
-    light: '#f8fafc', // Light background
-    border: '#e5e7eb', // Border color
+    primary: '#1e40af',
+    secondary: '#059669',
+    accent: '#dc2626',
+    neutral: '#374151',
+    light: '#f8fafc',
+    border: '#e5e7eb',
   };
 
   // Prepare data for charts
@@ -189,7 +214,7 @@ const ModelEvaluationDashboard = () => {
     const rowSums = matrix.map((row) => row.reduce((a: number, b: number) => a + b, 0));
 
     return (
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200" style={{ width: "100%" }}>
         <h3 className="text-lg font-semibold text-gray-800 mb-6 text-center">{title}</h3>
         <div className="overflow-x-auto">
           <table className="w-full border-collapse">
@@ -256,7 +281,7 @@ const ModelEvaluationDashboard = () => {
 
   // Professional Metric Card
   const MetricCard: React.FC<MetricCardProps> = ({ title, value, subtitle, change, trend }) => (
-    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow" style={{ width: "100%" }}>
       <div className="flex justify-between items-start mb-4">
         <div>
           <h3 className="text-sm font-medium text-gray-600 uppercase tracking-wide">{title}</h3>
@@ -284,10 +309,15 @@ const ModelEvaluationDashboard = () => {
     { key: 'comparison', label: 'Model Comparison' },
   ];
 
-  // Define tickFormatter function separately to avoid inline parsing issues
-  const formatTick = (value: number): string => {
-    return `${value}%`;
-  };
+  // Define tickFormatter function
+  const formatTick = (value: number): string => `${value}%`;
+
+  // Responsive chart heights and font sizes
+  const chartHeight = useChartHeight(340, 220);
+  const overviewChartHeight = useChartHeight(400, 250);
+  const tickFontSize = useTickFontSize();
+  const mainYAxisDomain = useYAxisDomain('main');
+  const classYAxisDomain = useYAxisDomain('class');
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -297,7 +327,6 @@ const ModelEvaluationDashboard = () => {
           <div className="text-center">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Plant Disease Classification Model</h1>
             <p className="text-lg text-gray-600 mb-6">Performance Analysis Dashboard - Model Evaluation Report</p>
-
             {/* Navigation */}
             <nav className="flex justify-center">
               <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
@@ -329,24 +358,23 @@ const ModelEvaluationDashboard = () => {
               <MetricCard title="Model Variants" value="3" subtitle="INT8, FP32 Precision" />
               <MetricCard title="Classes" value="3" subtitle="Early Blight, Healthy, Late Blight" />
             </div>
-
             {/* Performance Overview Chart */}
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200" style={{ width: "100%" }}>
               <div className="flex justify-between items-center mb-6">
                 <div>
                   <h2 className="text-xl font-semibold text-gray-900">Model Performance Comparison</h2>
                   <p className="text-sm text-gray-600 mt-1">Accuracy and ROC AUC scores across model configurations</p>
                 </div>
               </div>
-              <ResponsiveContainer width="100%" height={400}>
+              <ResponsiveContainer width="100%" height={overviewChartHeight}>
                 <BarChart data={performanceData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} angle={-45} textAnchor="end" height={80} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: tickFontSize }} angle={-45} textAnchor="end" height={80} />
                   <YAxis
-                    domain={[90, 100]}
+                    domain={mainYAxisDomain}
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                    tick={{ fill: '#6b7280', fontSize: tickFontSize, fontWeight: 700 }}
                     tickFormatter={formatTick}
                   />
                   <Tooltip content={<CustomTooltip />} />
@@ -357,7 +385,7 @@ const ModelEvaluationDashboard = () => {
             </div>
 
             {/* Key Findings */}
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200" style={{ width: "100%" }}>
               <h2 className="text-xl font-semibold text-gray-900 mb-4">Key Findings</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -396,7 +424,7 @@ const ModelEvaluationDashboard = () => {
             </div>
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
               <ConfusionMatrix matrix={data.test.float32.confusion_matrix} title="Test Set - FP32 Model" classes={classNames} />
-              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200" style={{ width: "100%" }}>
                 <h3 className="text-lg font-semibold text-gray-800 mb-4">Analysis Summary</h3>
                 <div className="space-y-4 text-sm text-gray-600">
                   <div>
@@ -424,28 +452,27 @@ const ModelEvaluationDashboard = () => {
               <h2 className="text-2xl font-semibold text-gray-900 mb-2">Classification Performance Metrics</h2>
               <p className="text-gray-600">Precision, Recall, and F1-Score analysis by class and model configuration</p>
             </div>
-
             {[
               { data: classificationData(data.validation.int8.classification_report, 'Validation INT8'), title: 'Validation Set - INT8 Model', color: professionalColors.primary },
               { data: classificationData(data.validation.float32.classification_report, 'Validation FP32'), title: 'Validation Set - FP32 Model', color: professionalColors.secondary },
               { data: classificationData(data.test.float32.classification_report, 'Test FP32'), title: 'Test Set - FP32 Model', color: professionalColors.accent },
             ].map((dataset, i) => (
-              <div key={i} className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+              <div key={i} className="bg-white p-6 rounded-lg shadow-sm border border-gray-200" style={{ width: "100%" }}>
                 <div className="flex justify-between items-center mb-6">
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900">{dataset.title}</h3>
                     <p className="text-sm text-gray-600 mt-1">Performance metrics by classification class</p>
                   </div>
                 </div>
-                <ResponsiveContainer width="100%" height={350}>
+                <ResponsiveContainer width="100%" height={chartHeight}>
                   <BarChart data={dataset.data} margin={{ top: 20, right: 30, left: 20, bottom: 40 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-                    <XAxis dataKey="class" axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: 12 }} />
+                    <XAxis dataKey="class" axisLine={false} tickLine={false} tick={{ fill: '#6b7280', fontSize: tickFontSize }} />
                     <YAxis
-                      domain={[90, 100]}
+                      domain={classYAxisDomain}
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fill: '#6b7280', fontSize: 12 }}
+                      tick={{ fill: '#6b7280', fontSize: tickFontSize, fontWeight: 700 }}
                       tickFormatter={formatTick}
                     />
                     <Tooltip content={<CustomTooltip />} />
@@ -466,9 +493,8 @@ const ModelEvaluationDashboard = () => {
               <h2 className="text-2xl font-semibold text-gray-900 mb-2">Comprehensive Model Comparison</h2>
               <p className="text-gray-600">Comparative analysis across all model configurations and metrics</p>
             </div>
-
             {/* Comparison Table */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden" style={{ width: "100%" }}>
               <div className="p-6 border-b border-gray-200">
                 <h3 className="text-lg font-semibold text-gray-900">Performance Summary Table</h3>
                 <p className="text-sm text-gray-600 mt-1">Comprehensive metrics comparison across all model variants</p>
@@ -493,9 +519,7 @@ const ModelEvaluationDashboard = () => {
                         f1:
                           ((data.validation.int8.classification_report['0']['f1-score'] +
                             data.validation.int8.classification_report['1']['f1-score'] +
-                            data.validation.int8.classification_report['2']['f1-score']) /
-                            3) *
-                          100,
+                            data.validation.int8.classification_report['2']['f1-score']) / 3) * 100,
                         samples: 5715,
                       },
                       {
@@ -505,9 +529,7 @@ const ModelEvaluationDashboard = () => {
                         f1:
                           ((data.validation.float32.classification_report['0']['f1-score'] +
                             data.validation.float32.classification_report['1']['f1-score'] +
-                            data.validation.float32.classification_report['2']['f1-score']) /
-                            3) *
-                          100,
+                            data.validation.float32.classification_report['2']['f1-score']) / 3) * 100,
                         samples: 5715,
                       },
                       {
@@ -517,9 +539,7 @@ const ModelEvaluationDashboard = () => {
                         f1:
                           ((data.test.float32.classification_report['0']['f1-score'] +
                             data.test.float32.classification_report['1']['f1-score'] +
-                            data.test.float32.classification_report['2']['f1-score']) /
-                            3) *
-                          100,
+                            data.test.float32.classification_report['2']['f1-score']) / 3) * 100,
                         samples: 7221,
                       },
                     ].map((row, i) => (
@@ -535,9 +555,8 @@ const ModelEvaluationDashboard = () => {
                 </table>
               </div>
             </div>
-
             {/* Recommendations */}
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200" style={{ width: "100%" }}>
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Recommendations & Insights</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
