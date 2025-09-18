@@ -28,7 +28,6 @@ function useTickFontSize() {
 
 // Responsive Y-axis domain
 function useYAxisDomain(type: 'main' | 'class') {
-  // On mobile, use a lower min for spread, else use [90, 100]
   if (typeof window !== 'undefined' && window.innerWidth <= 480) {
     return type === 'main' ? [85, 100] : [80, 100];
   }
@@ -214,9 +213,9 @@ const ModelEvaluationDashboard = () => {
     const rowSums = matrix.map((row) => row.reduce((a: number, b: number) => a + b, 0));
 
     return (
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200" style={{ width: "100%" }}>
+      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200" style={{ width: "100%", maxWidth: 480, margin: "0 auto" }}>
         <h3 className="text-lg font-semibold text-gray-800 mb-6 text-center">{title}</h3>
-        <div className="overflow-x-auto">
+        <div className="confusion-matrix-table-wrapper">
           <table className="w-full border-collapse">
             <thead>
               <tr>
@@ -271,7 +270,7 @@ const ModelEvaluationDashboard = () => {
             </tbody>
           </table>
         </div>
-        <div className="mt-4 text-sm text-gray-600">
+        <div className="mt-4 text-sm text-gray-600 text-center">
           <p>Total samples: {total.toLocaleString()}</p>
           <p>Overall accuracy: {((matrix[0][0] + matrix[1][1] + matrix[2][2]) / total * 100).toFixed(2)}%</p>
         </div>
@@ -425,7 +424,7 @@ const ModelEvaluationDashboard = () => {
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
               <ConfusionMatrix matrix={data.test.float32.confusion_matrix} title="Test Set - FP32 Model" classes={classNames} />
               <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200" style={{ width: "100%" }}>
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">Analysis Summary</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Analysis Summary</h3>
                 <div className="space-y-4 text-sm text-gray-600">
                   <div>
                     <h4 className="font-medium text-gray-800">Strong Diagonal Performance</h4>
