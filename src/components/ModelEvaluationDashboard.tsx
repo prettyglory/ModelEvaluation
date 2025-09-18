@@ -213,64 +213,66 @@ const ModelEvaluationDashboard = () => {
     const rowSums = matrix.map((row) => row.reduce((a: number, b: number) => a + b, 0));
 
     return (
-      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200" style={{ width: "100%", maxWidth: 480, margin: "0 auto" }}>
+      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 confusion-matrix-card" style={{ width: "100%" }}>
         <h3 className="text-lg font-semibold text-gray-800 mb-6 text-center">{title}</h3>
         <div className="confusion-matrix-table-wrapper">
-          <table className="w-full border-collapse">
-            <thead>
-              <tr>
-                <th className="p-3 text-sm font-medium text-gray-600 border-b border-gray-200"></th>
-                <th colSpan={3} className="p-3 text-sm font-medium text-gray-600 border-b border-gray-200 text-center">
-                  Predicted
-                </th>
-              </tr>
-              <tr>
-                <th className="p-3 text-sm font-medium text-gray-600 border-b border-gray-200"></th>
-                {classes.map((cls, i) => (
-                  <th key={i} className="p-3 text-sm font-medium text-gray-600 border-b border-gray-200 text-center min-w-[100px]">
-                    {cls}
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr>
+                  <th className="p-3 text-sm font-medium text-gray-600 border-b border-gray-200"></th>
+                  <th colSpan={3} className="p-3 text-sm font-medium text-gray-600 border-b border-gray-200 text-center">
+                    Predicted
                   </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {matrix.map((row, i) => (
-                <tr key={i}>
-                  {i === Math.floor(matrix.length / 2) && (
-                    <th rowSpan={matrix.length} className="p-3 text-sm font-medium text-gray-600 border-r border-gray-200 text-center writing-mode-vertical">
-                      Actual
-                    </th>
-                  )}
-                  {i !== Math.floor(matrix.length / 2) && (
-                    <th className="p-3 text-sm font-medium text-gray-600 border-r border-gray-200 text-right">
-                      {classes[i]}
-                    </th>
-                  )}
-                  {row.map((cell, j) => {
-                    const isCorrect = i === j;
-                    const percentage = ((cell / rowSums[i]) * 100).toFixed(1);
-                    return (
-                      <td
-                        key={j}
-                        className={`p-4 text-center border border-gray-200 ${
-                          isCorrect
-                            ? 'bg-green-50 text-green-800 font-semibold'
-                            : cell > 0
-                              ? 'bg-red-50 text-red-700'
-                              : 'bg-gray-50 text-gray-500'
-                        }`}
-                      >
-                        <div className="text-base font-medium">{cell}</div>
-                        <div className="text-xs text-gray-600 mt-1">{percentage}%</div>
-                      </td>
-                    );
-                  })}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+                <tr>
+                  <th className="p-3 text-sm font-medium text-gray-600 border-b border-gray-200"></th>
+                  {classes.map((cls, i) => (
+                    <th key={i} className="p-3 text-sm font-medium text-gray-600 border-b border-gray-200 text-center min-w-[100px]">
+                      {cls}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {matrix.map((row, i) => (
+                  <tr key={i}>
+                    {i === Math.floor(matrix.length / 2) && (
+                      <th rowSpan={matrix.length} className="p-3 text-sm font-medium text-gray-600 border-r border-gray-200 text-center writing-mode-vertical">
+                        Actual
+                      </th>
+                    )}
+                    {i !== Math.floor(matrix.length / 2) && (
+                      <th className="p-3 text-sm font-medium text-gray-600 border-r border-gray-200 text-right">
+                        {classes[i]}
+                      </th>
+                    )}
+                    {row.map((cell, j) => {
+                      const isCorrect = i === j;
+                      const percentage = ((cell / rowSums[i]) * 100).toFixed(1);
+                      return (
+                        <td
+                          key={j}
+                          className={`p-4 text-center border border-gray-200 ${
+                            isCorrect
+                              ? 'bg-green-50 text-green-800 font-semibold'
+                              : cell > 0
+                                ? 'bg-red-50 text-red-700'
+                                : 'bg-gray-50 text-gray-500'
+                          }`}
+                        >
+                          <div className="text-base font-medium">{cell}</div>
+                          <div className="text-xs text-gray-600 mt-1">{percentage}%</div>
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-        <div className="mt-4 text-sm text-gray-600 text-center">
+        <div className="mt-4 text-sm text-gray-600">
           <p>Total samples: {total.toLocaleString()}</p>
           <p>Overall accuracy: {((matrix[0][0] + matrix[1][1] + matrix[2][2]) / total * 100).toFixed(2)}%</p>
         </div>
@@ -423,8 +425,8 @@ const ModelEvaluationDashboard = () => {
             </div>
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
               <ConfusionMatrix matrix={data.test.float32.confusion_matrix} title="Test Set - FP32 Model" classes={classNames} />
-              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200" style={{ width: "100%" }}>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Analysis Summary</h3>
+              <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 confusion-matrix-card" style={{ width: "100%" }}>
+                <h3 className="text-lg font-semibold text-gray-800 mb-4">Analysis Summary</h3>
                 <div className="space-y-4 text-sm text-gray-600">
                   <div>
                     <h4 className="font-medium text-gray-800">Strong Diagonal Performance</h4>
